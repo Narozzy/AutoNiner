@@ -2,6 +2,7 @@ import pandas as pd
 from openpyxl import Workbook, load_workbook
 import fire
 from collections import OrderedDict
+import ast
 
 SUPPORTED_FUNCTIONS = {
     'AVERAGE': lambda x: (sum(x))/len(x),
@@ -24,8 +25,10 @@ def construct_template_headers(ws):
 def parse_item(i):
     it = i[2:-2] # remove << >>
     if 'FORM' in it:
-        it = it[5:-1]
+        it = it[5:-1] # Remove FORM()
         args = it.split(',')
+        if ':' in args[0]: # Check if this is suppose to be a list
+            args[0] = ast.literal_eval(','.join(args[0].split(':')))
     else:
         args = it.split(':')
     return args
@@ -37,8 +40,11 @@ def main():
     ws_template = wb_template.active
     forms = construct_template_headers(ws_template)
     for col,item in forms.items():
-        a = parse_item(item)
-        print()
+        cols, feature = parse_item(item)
+        if feature in SUPPORTED_FUNCTIONS:
+            print()
+        else:
+            print()
 
     print()
 
