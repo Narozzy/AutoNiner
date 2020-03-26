@@ -2,7 +2,7 @@ from django.db import models
 
 # Create your models here.
 class Task(models.Model):
-    title = models.CharField('Task Title',max_length=50)
+    title = models.CharField('Task Name',max_length=50)
     description = models.CharField('Task Description',max_length=50, blank=True)
 
     # Administrative log information
