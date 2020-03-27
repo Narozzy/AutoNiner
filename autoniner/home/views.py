@@ -1,10 +1,12 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from .forms import TaskForm
+from .models import Task
 
 # Create your views here.
 def index(request):
-    return render(request, 'index.html', context={'hello': 'world'})
+    all_tasks = Task.objects.all()
+    return render(request, 'index.html', context={'tasks': all_tasks})
 
 def CreateTask(request):
     content = {'current_user': request.user}
@@ -13,7 +15,7 @@ def CreateTask(request):
         form = TaskForm(request.POST)
         if form.is_valid():
             form.save()
-            return render(request, 'index.html', {})
+            return redirect('home')
     elif request.method == 'GET':
         # This will retrieve the form
         content.update({'form': TaskForm()})
