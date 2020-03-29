@@ -15,3 +15,6 @@ class Task(models.Model):
         ordering = ['date_created']
         verbose_name_plural = 'tasks'
         get_latest_by = ['date_created']
+    
+    def __str__(self):
+        return '{}'.format(self.title)
