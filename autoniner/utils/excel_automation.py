@@ -54,6 +54,7 @@ def main():
     ws_template = wb_template.active
     forms = construct_template_headers(ws_template)
     df = pd.DataFrame(columns=forms.keys())
+
     for col,item in forms.items():
         data = df_data[col]
         cols, feature = parse_item(item)
@@ -64,6 +65,8 @@ def main():
                 df[col] = SUPPORTED_FUNCTIONS[feature](data)
         else:
             df[col] = SUPPORTED_MODIFIERS[feature](data)
+
+
 
 if __name__ == '__main__':
     fire.Fire(main)
