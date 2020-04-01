@@ -16,14 +16,22 @@ def CreateTask(request):
         form = TaskForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('home')
+            t = Task.objects.all().latest()
+            return redirect('template', id=t.task_id)
     elif request.method == 'GET':
         # This will retrieve the form
         content.update({'form': TaskForm()})
     return render(request, 'create_task.html', context=content)
+
+def CreateExcelTemplate(request, id):
+    return render(request, 'excel_template.html', context={})
 
 def delete(request, id):
     t = Task.objects.get(task_id=id)
     if t:
         t.delete()
     return redirect('home')
+
+def details(request, id):
+    t = Task.objects.get(task_id=id)
+    return render(request, 'data_visualization.html', context={'task':t})
