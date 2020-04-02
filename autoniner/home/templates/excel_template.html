@@ -31,6 +31,8 @@
         'DOOR': ['start_time', 'end_time', 'tmestamp']
     }
 
+    var myGrid;
+
     function ExcelDateToJSDate(date) {
         return new Date(Math.round((date - 25569)*86400*1000));
     }
@@ -47,7 +49,7 @@
             workbook.SheetNames.forEach(function(sheetName) {
                 var XL_row_object = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
                 var json_object = JSON.stringify(XL_row_object);
-                var myGrid = canvasDatagrid({parentNode:document.getElementById('myGrid'), data:XL_row_object, columnHeaderClickBehavior:'select'});
+                myGrid = canvasDatagrid({parentNode:document.getElementById('myGrid'), data:XL_row_object, columnHeaderClickBehavior:'select'});
                 myGrid.addEventListener('afterrendercell', function(e) {
                     if (e.cell.rowIndex > -1) {
                         if (taskDateColMap['{{task_type}}'].includes(e.cell.header.name)) {
@@ -73,15 +75,28 @@
             let form = document.createElement('form');
             form.id = 'form-submit-template';
             form.method = 'POST';
-            form.action = 'template/{{task_id}}';
             let btn = document.createElement('button');
             btn.type = 'submit';
             btn.classList.add('btn');
             btn.classList.add('btn-sm');
             btn.classList.add('btn-outline-secondary');
             btn.innerHTML = 'Submit Template';
+            let excelForm = document.createElement('input');
+            excelForm.type = 'hidden';
+            excelForm.id = 'excelForm-input';
+            excelForm.name = 'template';
+            form.appendChild(excelForm);
             form.appendChild(btn);
             div.appendChild(form);
+            form.innerHTML += '\n{% csrf_token %}'
+
+            $('#form-submit-template').submit(function() {
+                console.log('In before submit function.');
+                let template_input = document.querySelector('#excelForm-input');
+                console.dir(myGrid.data);
+                template_input.value = JSON.stringify(myGrid.data);
+                console.log(template_input.value);
+            })
         }
     }
   </script>

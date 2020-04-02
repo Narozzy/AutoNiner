@@ -24,3 +24,18 @@ class Task(models.Model):
     
     def __str__(self):
         return '{}'.format(self.title)
+    
+class DoorCountInstance(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='tid')
+    id = models.IntegerField(primary_key=True)
+    sensor_id = models.CharField(max_length=100)
+    start_time = models.DecimalField(max_digits=100, decimal_places=20)
+    end_time = models.DecimalField(max_digits=100,decimal_places=20)
+    in_count = models.IntegerField()
+    out_count = models.IntegerField()
+    sensor_type = models.CharField(max_length=100)
+    ip_address = models.CharField(max_length=100)
+    device_type = models.CharField(max_length=100)
+    serial_number = models.CharField(max_length=255)
+    sensor_group = models.CharField(max_length=255)
+    tmestamp = models.DecimalField(max_digits=100,decimal_places=20)
