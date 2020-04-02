@@ -60,7 +60,10 @@ def parse_item(i):
 
 def csv_transform(query_set, task_type):
     df_data = pd.DataFrame.from_records(query_set)
+    breakpoint()
     for col in jobTypeToDateTimeColsMap[task_type]:
-        df_data[col] = ef.dateFormat(df_data, col, '%Y-%m-%d')
+        df_data = ef.dateFormat(df_data, col, '%Y-%m-%d')
+    breakpoint()
     df_data = df_data[jobTypeColumnsToSave[task_type]]
+    breakpoint()
     return df_data
