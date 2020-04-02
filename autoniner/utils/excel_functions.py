@@ -1,5 +1,8 @@
 import pandas as pd
 from openpyxl import Workbook, load_workbook
+import xlrd
+import datetime
+import math
 import fire
 from collections import OrderedDict
 import ast
@@ -21,11 +24,10 @@ def partition_table( raw_table, filter_column_str, regex_filter_arr ):
     return partitioned_tables
 
 def dateFormat( raw_table, column_name, date_format ):
-
     formatted_table = raw_table.copy()
-
+    # This is necessary to convert from excel DT format -> python DT.
+    formatted_table[column_name] = formatted_table[column_name].apply(lambda x: datetime.datetime.fromordinal(datetime.datetime(1900,1,1).toordinal() + x - 2))
     formatted_table[column_name] = formatted_table[column_name].dt.strftime( date_format )
-
     return formatted_table
 
 def main():

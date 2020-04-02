@@ -1,5 +1,6 @@
 import json
 import pdb
+import utils.excel_automation as ea
 from django.core import serializers
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
@@ -32,9 +33,8 @@ def CreateExcelTemplate(request, id):
         instances = json.loads(request.POST['template'])
         dc_instances = []
         for i in instances:
-            i.update({'task': t.task_id})
             dc_instances.append(
-                DoorCountInstance.objects.create(
+                DoorCountInstance(
                     task = t,
                     id = i['id'],
                     sensor_id = i['sensor_id'],
@@ -51,6 +51,8 @@ def CreateExcelTemplate(request, id):
                 )
             )
         DoorCountInstance.objects.bulk_create(dc_instances)
+        task_objs = DoorCountInstance.objects.filter(task_id=t).values()
+        ea.csv_transform(task_objs, t.task_type)
         return redirect('home')
     return render(request, 'excel_template.html', context={'id': t.task_id, 'task_type': t.task_type})
 

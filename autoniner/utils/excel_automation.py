@@ -2,8 +2,14 @@ import pandas as pd
 from openpyxl import Workbook, load_workbook
 import fire
 from collections import OrderedDict
+import utils.excel_functions as ef
 import ast
 import string
+
+
+jobTypeToDateTimeColsMap = {
+    'DOOR': ['start_time', 'end_time', 'tmestamp'],
+}
 
 FUNCTIONS_W_PARAMS = ['DIVISION']
 SUPPORTED_FUNCTIONS = {
@@ -48,25 +54,7 @@ def parse_item(i):
     return args
 
 
-def main():
-    wb_template = load_workbook('template.xlsx')
-    df_data = pd.read_excel('mock_data.xlsx')
-    ws_template = wb_template.active
-    forms = construct_template_headers(ws_template)
-    df = pd.DataFrame(columns=forms.keys())
-
-    for col,item in forms.items():
-        data = df_data[col]
-        cols, feature = parse_item(item)
-        if isinstance(feature, list) or feature in SUPPORTED_FUNCTIONS:
-            if isinstance(feature,list):
-                df[col] = SUPPORTED_FUNCTIONS[feature[0]](data, feature[1])
-            else:
-                df[col] = SUPPORTED_FUNCTIONS[feature](data)
-        else:
-            df[col] = SUPPORTED_MODIFIERS[feature](data)
-
-
-
-if __name__ == '__main__':
-    fire.Fire(main)
+def csv_transform(query_set, task_type):
+    df_data = pd.DataFrame.from_records(query_set)
+    for col in jobTypeToDateTimeColsMap[task_type]:
+        df_data[col] = ef.dateFormat(df_data, col, '%Y-%m-%d')
