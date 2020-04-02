@@ -1,9 +1,15 @@
 from django.db import models
 
+TASK_CHOICES = (
+    ('DOOR', 'DOOR'),
+    ('SCANNER', 'SCANNER'),
+)
+
 # Create your models here.
 class Task(models.Model):
     title = models.CharField('Task Name',max_length=50)
     description = models.CharField('Task Description',max_length=50, blank=True)
+    task_type = models.CharField(max_length=10, choices=TASK_CHOICES, default='door count')
 
     # Administrative log information
     task_id = models.AutoField(primary_key=True) # This autoincrements, so we can guarentee uniqueness on this field.

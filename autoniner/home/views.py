@@ -24,7 +24,8 @@ def CreateTask(request):
     return render(request, 'create_task.html', context=content)
 
 def CreateExcelTemplate(request, id):
-    return render(request, 'excel_template.html', context={})
+    t = Task.objects.get(task_id=id)
+    return render(request, 'excel_template.html', context={'id': t.task_id, 'task_type': t.task_type})
 
 def delete(request, id):
     t = Task.objects.get(task_id=id)

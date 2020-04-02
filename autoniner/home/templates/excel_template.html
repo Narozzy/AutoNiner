@@ -18,12 +18,23 @@
         </style>
     </head>
     <body>
-        
-        <div class='container'>
-            <input type='file' onchange='importExcel(event);' style='margin-bottom:5px;margin-top:5px;'>Import Excel File</button>
-            <div id="myGrid"></div>
+    <div class='container' id='div-file-container'>
+        <div class='custom-file mb-3'>
+            <input type='file' id='customFile' onchange='importExcel(event);' style='margin-bottom:5px;margin-top:5px;' class='custom-file-input'></button>
+            <label class='custom-file-label' for='customFile'>Import CSV File</label>
         </div>
+        
+    </div>
+    <div id="myGrid"></div>
   <script type="text/javascript" charset="utf-8">
+    const taskDateColMap = {
+        'DOOR': ['start_time', 'end_time', 'tmestamp']
+    }
+
+    function ExcelDateToJSDate(date) {
+        return new Date(Math.round((date - 25569)*86400*1000));
+    }
+
     function importExcel(e) {
         console.dir(e);
         let fr = new FileReader();
@@ -35,10 +46,18 @@
 
             workbook.SheetNames.forEach(function(sheetName) {
                 var XL_row_object = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-                console.dir(XL_row_object);
                 var json_object = JSON.stringify(XL_row_object);
-                console.log(json_object);
-                var myGrid = canvasDatagrid({parentNode:document.getElementById('myGrid'), data:XL_row_object})
+                var myGrid = canvasDatagrid({parentNode:document.getElementById('myGrid'), data:XL_row_object, columnHeaderClickBehavior:'select'});
+                myGrid.addEventListener('afterrendercell', function(e) {
+                    if (e.cell.rowIndex > -1) {
+                        if (taskDateColMap['{{task_type}}'].includes(e.cell.header.name)) {
+                            e.cell.type = 'date';
+                            e.cell.formattedValue = ExcelDateToJSDate(e.cell.value);
+                            e.cell.value = ExcelDateToJSDate(e.cell.value);
+                        }
+                    }
+                })
+                
             })
         };
 
@@ -47,6 +66,23 @@
         }
 
         fr.readAsBinaryString(e.target.files[0]);
+
+        // Append the form for submitting this excel file at the end
+        if (document.getElementById('form-submit-template') === null) {
+            let div = document.getElementById('div-file-container');
+            let form = document.createElement('form');
+            form.id = 'form-submit-template';
+            form.method = 'POST';
+            form.action = 'template/{{task_id}}';
+            let btn = document.createElement('button');
+            btn.type = 'submit';
+            btn.classList.add('btn');
+            btn.classList.add('btn-sm');
+            btn.classList.add('btn-outline-secondary');
+            btn.innerHTML = 'Submit Template';
+            form.appendChild(btn);
+            div.appendChild(form);
+        }
     }
   </script>
 
