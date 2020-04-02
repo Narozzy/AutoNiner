@@ -11,6 +11,10 @@ jobTypeToDateTimeColsMap = {
     'DOOR': ['start_time', 'end_time', 'tmestamp'],
 }
 
+jobTypeColumnsToSave = {
+    'DOOR': ['sensor_id', 'tmestamp', 'in_count', 'out_count']
+}
+
 FUNCTIONS_W_PARAMS = ['DIVISION']
 SUPPORTED_FUNCTIONS = {
     'AVERAGE': lambda x: (sum(x))/len(x),
@@ -58,3 +62,5 @@ def csv_transform(query_set, task_type):
     df_data = pd.DataFrame.from_records(query_set)
     for col in jobTypeToDateTimeColsMap[task_type]:
         df_data[col] = ef.dateFormat(df_data, col, '%Y-%m-%d')
+    df_data = df_data[jobTypeColumnsToSave[task_type]]
+    return df_data
