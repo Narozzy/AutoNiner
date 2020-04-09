@@ -15,24 +15,27 @@ jobTypeColumnsToSave = {
     'DOOR': ['sensor_id', 'tmestamp', 'in_count', 'out_count']
 }
 
-FUNCTIONS_W_PARAMS = ['DIVISION']
-SUPPORTED_FUNCTIONS = {
-    'AVERAGE': lambda x: (sum(x))/len(x),
-    'DIVISION': lambda x,divisor: x.divide(divisor),
-}
+master_template_wb = load_workbook(filename='utils/master_lookup.xlsx')
+# master_template_wb = load_workbook(filename='autoniner/utils/master_lookup.xlsx')
+semesterMap, academicMap, termMap, locationMap = {}, {}, {}, {} # Maps in place of VLOOKUPs
 
-SUPPORTED_MODIFIERS = {
-    'spaced': lambda x: x.apply(lambda x: ' '.join(x.split(' ')))
-}
+semester_ws = master_template_wb['SemesterLookUp']
+academic_ws = master_template_wb['AcadYrLookUp']
+term_ws = master_template_wb['TermLookUp']
+location_ws = master_template_wb['LocationLookUp']
 
-CONVERSIONS = {
-    'int': lambda i: int(i),
-}
+for r_idx, rval in enumerate(semester_ws.iter_rows(min_row=2, max_row=semester_ws.max_row), start=2):
+    semesterMap.update({semester_ws.cell(row=r_idx, column=1).value : semester_ws.cell(row=r_idx, column=2).value})
 
-def apply_conversions(arg):
-    if arg.isdigit():
-        return CONVERSIONS['int'](arg)
+for r_idx, rval in enumerate(academic_ws.iter_rows(min_row=2, max_row=academic_ws.max_row), start=2):
+    academicMap.update({academic_ws.cell(row=r_idx, column=1).value : {'year': academic_ws.cell(row=r_idx, column=2).value, 'order': academic_ws.cell(row=r_idx, column=3).value}})
         
+for r_idx, rval in enumerate(term_ws.iter_rows(min_row=2, max_row=term_ws.max_row), start=2):
+    termMap.update({term_ws.cell(row=r_idx, column=1).value : term_ws.cell(row=r_idx, column=2).value})
+
+for r_idx, rval in enumerate(location_ws.iter_rows(min_row=2, max_row=location_ws.max_row), start=2):
+    locationMap.update({location_ws.cell(row=r_idx, column=1).value : location_ws.cell(row=r_idx, column=2).value})
+
 """ @description: to accept a xlsx/csv file and modify the data based on the format encoded within """
 def construct_template_headers(ws):
     """ @description: returns an OrderedDict of headers/the encoded value """
