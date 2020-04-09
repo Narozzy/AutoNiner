@@ -32,6 +32,7 @@
     }
 
     var myGrid;
+    var XL_row_object
 
     function ExcelDateToJSDate(date) {
         return new Date(Math.round((date - 25569)*86400*1000));
@@ -47,9 +48,11 @@
             });
 
             workbook.SheetNames.forEach(function(sheetName) {
-                var XL_row_object = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+                XL_row_object = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
                 var json_object = JSON.stringify(XL_row_object);
-                myGrid = canvasDatagrid({parentNode:document.getElementById('myGrid'), data:XL_row_object, columnHeaderClickBehavior:'select'});
+                console.dir(XL_row_object);
+                var displayed_rows = XL_row_object.slice(0,10); // Get first ten elements
+                myGrid = canvasDatagrid({parentNode:document.getElementById('myGrid'), data:displayed_rows, columnHeaderClickBehavior:'select'});
                 myGrid.addEventListener('afterrendercell', function(e) {
                     if (e.cell.rowIndex > -1) {
                         if (taskDateColMap['{{task_type}}'].includes(e.cell.header.name)) {
@@ -94,7 +97,7 @@
                 console.log('In before submit function.');
                 let template_input = document.querySelector('#excelForm-input');
                 console.dir(myGrid.data);
-                template_input.value = JSON.stringify(myGrid.data);
+                template_input.value = JSON.stringify(XL_row_object);
                 console.log(template_input.value);
             })
         }
