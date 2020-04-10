@@ -3,8 +3,9 @@ import pdb
 import utils.excel_automation as ea
 import time
 from django.core import serializers
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,HttpResponseRedirect
 from django.http import HttpResponse
+from django.urls import reverse
 from .forms import TaskForm, DoorCountInstanceForm
 from .models import Task, DoorCountInstance
 
@@ -56,7 +57,7 @@ def CreateExcelTemplate(request, id):
         df_csv = ea.csv_transform(task_objs, t.task_type)
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename={}_{}.csv'.format(t.task_type, time.strftime('%Y%m%d_%H%M%S'))
-        df_csv.to_csv(path_or_buf=response)
+        df_csv.to_csv(path_or_buf=response, index=False)
         return response
     return render(request, 'excel_template.html', context={'id': t.task_id, 'task_type': t.task_type})
 

@@ -15,6 +15,8 @@ jobTypeColumnsToSave = {
     'DOOR': ['sensor_id', 'tmestamp', 'in_count', 'out_count']
 }
 
+master_template_cols = ['Location', 'Time', 'DayOfWeek', 'Month', 'Day', 'Month+Day', 'Term', 'Calendar', 'Semester', 'AY']
+
 master_template_wb = load_workbook(filename='utils/master_lookup.xlsx')
 # master_template_wb = load_workbook(filename='autoniner/utils/master_lookup.xlsx')
 semesterMap, academicMap, termMap, locationMap = {}, {}, {}, {} # Maps in place of VLOOKUPs
@@ -35,6 +37,18 @@ for r_idx, rval in enumerate(term_ws.iter_rows(min_row=2, max_row=term_ws.max_ro
 
 for r_idx, rval in enumerate(location_ws.iter_rows(min_row=2, max_row=location_ws.max_row), start=2):
     locationMap.update({location_ws.cell(row=r_idx, column=1).value : location_ws.cell(row=r_idx, column=2).value})
+
+
+job_transform_lambdas = {
+    'Location': lambda x: locationMap[x['sensor_id']],
+}
+
+def door_job_transform(df):
+    location_col = []
+    for v in df['sensor_id']:
+        location_col.append(locationMap[v])
+    df['Location'] = location_col
+    return df
 
 """ @description: to accept a xlsx/csv file and modify the data based on the format encoded within """
 def construct_template_headers(ws):
@@ -66,4 +80,6 @@ def csv_transform(query_set, task_type):
     for col in jobTypeToDateTimeColsMap[task_type]:
         df_data = ef.dateFormat(df_data, col, '%Y-%m-%d')
     df_data = df_data[jobTypeColumnsToSave[task_type]]
+    if task_type == 'DOOR':
+        df_data = door_job_transform(df_data)
     return df_data

@@ -4,8 +4,6 @@
 import pandas as pd
 import numpy as np
 
-df = pd.read_csv('AtkinsDoorCounts7.1.2019.3.19.20.csv') #read file
-
 #Filter for all north entrances
 #df_northentrance = df[df['sensor_id'] == 'North Entrance' && df[df['sensor_id'] == 'Exit']
 #print('In count:', df_northentrance['in_count'].sum())
