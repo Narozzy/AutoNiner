@@ -26,7 +26,7 @@ def partition_table( raw_table, filter_column_str, regex_filter_arr ):
 def dateFormat( raw_table, column_name, date_format ):
     formatted_table = raw_table.copy()
     # This is necessary to convert from excel DT format -> python DT.
-    formatted_table[column_name] = formatted_table[column_name].apply(lambda x: datetime.datetime.fromordinal(datetime.datetime(1900,1,1).toordinal() + round(x) - 2).isoformat())
+    formatted_table[column_name] = pd.TimedeltaIndex(formatted_table[column_name].astype('float'), unit='d') + datetime.datetime(1899, 12, 30)
     # formatted_table[column_name] = formatted_table[column_name].dt.strftime( date_format )
     return formatted_table
 
