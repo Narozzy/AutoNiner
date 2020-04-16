@@ -45,9 +45,13 @@ job_transform_lambdas = {
 
 def door_job_transform(df):
     location_col = []
+    term_col = []
     for v in df['sensor_id']:
         location_col.append(locationMap[v])
     df['Location'] = location_col
+    df['Time'] = pd.DatetimeIndex(df['tmestamp']).hour
+    df['DayOfWeek'] = df['tmestamp'].dt.day_name()
+    df['Month'] = df['tmestamp'].dt.strftime('%b')
     return df
 
 """ @description: to accept a xlsx/csv file and modify the data based on the format encoded within """
