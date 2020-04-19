@@ -2,12 +2,19 @@ import json
 import pdb
 import utils.excel_automation as ea
 import time
+import datetime
+from decimal import *
 from django.core import serializers
 from django.shortcuts import render,redirect,HttpResponseRedirect
 from django.http import HttpResponse
 from django.urls import reverse
 from .forms import TaskForm, DoorCountInstanceForm
 from .models import Task, DoorCountInstance
+
+task_type_map = {
+    'DOOR': DoorCountInstance,
+
+}
 
 # Create your views here.
 def index(request):
@@ -64,6 +71,10 @@ def CreateExcelTemplate(request, id):
 def VisualizationPage(request,id):
     t = Task.objects.get(task_id=id)
     if request.method == 'POST':
+        start_date = convert_to_serial(datetime.datetime.strptime(request.POST['start_date'], '%m/%d/%Y'))
+        end_date = convert_to_serial(datetime.datetime.strptime(request.POST['end_date'], '%m/%d/%Y'))
+        instances = task_type_map[t.task_type].objects.filter(task_id=t, start_time__gte=start_date, end_time__lte=end_date)
+        # instances = task_type_map[t.task_type].objects.filter(task_id=t)
         breakpoint()
     return render(request, 'data_visualization.html', context={'id':t.task_id, 'task_type': t.task_type})
 
@@ -76,3 +87,10 @@ def delete(request, id):
 def details(request, id):
     t = Task.objects.get(task_id=id)
     return render(request, 'data_visualization.html', context={'task':t})
+
+
+""" Helper Functions """
+def convert_to_serial(dt: datetime.datetime):
+    temp = datetime.datetime(1899, 12, 30)
+    delta = dt - temp
+    return Decimal(delta.days) + (Decimal(delta.seconds) / 86400)
