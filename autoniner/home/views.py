@@ -61,6 +61,12 @@ def CreateExcelTemplate(request, id):
         return response
     return render(request, 'excel_template.html', context={'id': t.task_id, 'task_type': t.task_type})
 
+def VisualizationPage(request,id):
+    t = Task.objects.get(task_id=id)
+    if request.method == 'POST':
+        breakpoint()
+    return render(request, 'data_visualization.html', context={'id':t.task_id, 'task_type': t.task_type})
+
 def delete(request, id):
     t = Task.objects.get(task_id=id)
     if t:

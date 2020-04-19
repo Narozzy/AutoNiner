@@ -1,14 +1,57 @@
 {% extends 'base_temp.html' %}
 
 {% block content %}
-    <div class="container mt-3">
-        <h2>{{task.title}}</h2>
-        <h4>{{task.description}}</h4>
-        <p>
-            WIP - This will be completed in the next sprint.
-        </p>
-        <p>
-            This will be where our visualization charts will go, this will be done by posting a form whenever a change is initiated to construct the form via numpy/matplotlib, saving the file, and then rendering to user.
-        </p>
-    </div>
+    <head>
+        <!-- Font Awesome -->
+        <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+        <!-- Moment.js -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js" integrity="sha256-VBLiveTKyUZMEzJd6z2mhfxIqz3ZATCuVMawPZGzIfA=" crossorigin="anonymous"></script>
+
+        <!-- Tempus Dominus Bootstrap 4 -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/css/tempusdominus-bootstrap-4.min.css" integrity="sha256-XPTBwC3SBoWHSmKasAk01c08M6sIA5gF5+sRxqak2Qs=" crossorigin="anonymous" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/js/tempusdominus-bootstrap-4.min.js" integrity="sha256-z0oKYg6xiLq3yJGsp/LsY9XykbweQlHl42jHv2XTBz4=" crossorigin="anonymous"></script>
+    </head>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="container mt-3">
+            <h4>Begin Date</h4>
+            <div class='form-group'>
+                <div class="input-group date" id="datetimepicker1" data-target-input="nearest">
+                    <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1" name="start_date"/>
+                    <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
+                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                    </div>
+                </div>
+            </div>
+            <h4>End Date</h4>
+            <div class='form-group'>
+                <div class="input-group date" id="datetimepicker2" data-target-input="nearest">
+                    <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker2" name="end_date"/>
+                    <div class="input-group-append" data-target="#datetimepicker2" data-toggle="datetimepicker">
+                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                    </div>
+                </div>
+            </div>
+            <input type='submit' value='Submit'/>
+        </div>
+    </form>
+
+    <script type="text/javascript">
+      $(function () {
+        $('#datetimepicker1').datetimepicker({
+            format: 'L'
+        });
+        $('#datetimepicker2').datetimepicker({
+            format: 'L',
+            useCurrent: false
+        });
+        $("#datetimepicker1").on("change.datetimepicker", function (e) {
+            $('#datetimepicker2').datetimepicker('minDate', e.date);
+        });
+        $("#datetimepicker2").on("change.datetimepicker", function (e) {
+            $('#datetimepicker1').datetimepicker('maxDate', e.date);
+        });
+      });
+    </script>
 {% endblock content %}
