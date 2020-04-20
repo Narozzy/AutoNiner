@@ -12,6 +12,13 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/css/tempusdominus-bootstrap-4.min.css" integrity="sha256-XPTBwC3SBoWHSmKasAk01c08M6sIA5gF5+sRxqak2Qs=" crossorigin="anonymous" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/js/tempusdominus-bootstrap-4.min.js" integrity="sha256-z0oKYg6xiLq3yJGsp/LsY9XykbweQlHl42jHv2XTBz4=" crossorigin="anonymous"></script>
     </head>
+    <div class='container mt-3'>
+        {% if max_range and min_range %}
+            <p>This task contains data starting from {{min_range}} until {{max_range}}</p>
+        {% else %}
+            <p>There is no data associated to this task, please upload data for this task to create a visualization.</p>
+        {% endif %}
+    </div>
     <form method="POST">
         {% csrf_token %}
         <div class="container mt-3">
