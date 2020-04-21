@@ -1,6 +1,6 @@
 import ast
 import string
-import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 import datetime
 import pandas as pd
@@ -62,7 +62,10 @@ def door_job_transform_viz(df):
     for v in df['sensor_id']:
         location_col.append(locationMap[v])
     df['Location'] = location_col
-    return df
+    north_total = df.loc[df['Location'] == 'North Entrance']['in_count'].sum() - df.loc[df['Location'] == 'North Entrance']['out_count'].sum()
+    south_total = df.loc[df['Location'] == 'South Entrance']['in_count'].sum() - df.loc[df['Location'] == 'South Entrance']['out_count'].sum()
+    coffee_total = df.loc[df['Location'] == 'CoffeeShop']['in_count'].sum() - df.loc[df['Location'] == 'CoffeeShop']['out_count'].sum()
+    return north_total, south_total, coffee_total
 
 """ @description: to accept a xlsx/csv file and modify the data based on the format encoded within """
 def construct_template_headers(ws):
@@ -104,6 +107,10 @@ def construct_visualization(instances, task_type: str):
 
 def construct_door_viz(instances):
     df = pd.DataFrame.from_records(instances)
-    df = door_job_transform_viz(df)
-    breakpoint()
-    return df.plot(x = 'Location', y = 'in_count')
+    n, s, c = door_job_transform_viz(df)
+    fig = plt.figure()
+    ax = fig.add_axes([0,0,1,1])
+    locations = ['North Entrance', 'South Entrance', 'Coffee Shop']
+    nums = [n, s, c]
+    ax.bar(locations, nums)
+    return fig
