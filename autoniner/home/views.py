@@ -8,6 +8,7 @@ from django.core import serializers
 from django.shortcuts import render,redirect,HttpResponseRedirect
 from django.http import HttpResponse
 from django.urls import reverse
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 from .forms import TaskForm, DoorCountInstanceForm
 from .models import Task, DoorCountInstance
 
@@ -72,16 +73,19 @@ def VisualizationPage(request,id):
     t = Task.objects.get(task_id=id)
     i = task_type_map[t.task_type].objects.all()
     if i:
-        min_range = datetime.datetime.utcfromtimestamp((i.order_by('-start_time').first().start_time - 25569) * Decimal(86400.0))
-        max_range = datetime.datetime.utcfromtimestamp((i.order_by('end_time').first().end_time - 25569) * Decimal(86400.0))
+        max_range = datetime.datetime.utcfromtimestamp((i.order_by('-start_time').first().start_time - 25569) * Decimal(86400.0))
+        min_range = datetime.datetime.utcfromtimestamp((i.order_by('end_time').first().end_time - 25569) * Decimal(86400.0))
     else:
         min_range, max_range = '', ''
     if request.method == 'POST':
         start_date = convert_to_serial(datetime.datetime.strptime(request.POST['start_date'], '%m/%d/%Y'))
         end_date = convert_to_serial(datetime.datetime.strptime(request.POST['end_date'], '%m/%d/%Y'))
-        instances = task_type_map[t.task_type].objects.filter(task_id=t).filter(start_time__gte=start_date).filter(end_time__lte=end_date)
-        # instances = task_type_map[t.task_type].objects.filter(task_id=t)
-        breakpoint()
+        instances = task_type_map[t.task_type].objects.filter(task_id=t).filter(start_time__gte=start_date).filter(end_time__lte=end_date).values()
+        plot = ea.construct_visualization(instances, t.task_type)
+        response = HttpResponse(content_type = 'image/png')
+        canvas = FigureCanvasAgg(plot)
+        canvas.print_png(response)
+        return response
     return render(request, 'data_visualization.html', context={'id':t.task_id, 'task_type': t.task_type, 'min_range': min_range, 'max_range': max_range})
 
 def delete(request, id):

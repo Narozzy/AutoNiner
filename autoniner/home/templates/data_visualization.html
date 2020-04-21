@@ -15,34 +15,34 @@
     <div class='container mt-3'>
         {% if max_range and min_range %}
             <p>This task contains data starting from {{min_range}} until {{max_range}}</p>
+            <form method="POST">
+                {% csrf_token %}
+                <div>
+                    <h4>Begin Date</h4>
+                    <div class='form-group'>
+                        <div class="input-group date" id="datetimepicker1" data-target-input="nearest">
+                            <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1" name="start_date"/>
+                            <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
+                                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <h4>End Date</h4>
+                    <div class='form-group'>
+                        <div class="input-group date" id="datetimepicker2" data-target-input="nearest">
+                            <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker2" name="end_date"/>
+                            <div class="input-group-append" data-target="#datetimepicker2" data-toggle="datetimepicker">
+                                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type='submit' value='Submit'/>
+                </div>
+            </form>
         {% else %}
             <p>There is no data associated to this task, please upload data for this task to create a visualization.</p>
         {% endif %}
     </div>
-    <form method="POST">
-        {% csrf_token %}
-        <div class="container mt-3">
-            <h4>Begin Date</h4>
-            <div class='form-group'>
-                <div class="input-group date" id="datetimepicker1" data-target-input="nearest">
-                    <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1" name="start_date"/>
-                    <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
-                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                    </div>
-                </div>
-            </div>
-            <h4>End Date</h4>
-            <div class='form-group'>
-                <div class="input-group date" id="datetimepicker2" data-target-input="nearest">
-                    <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker2" name="end_date"/>
-                    <div class="input-group-append" data-target="#datetimepicker2" data-toggle="datetimepicker">
-                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                    </div>
-                </div>
-            </div>
-            <input type='submit' value='Submit'/>
-        </div>
-    </form>
 
     <script type="text/javascript">
       $(function () {

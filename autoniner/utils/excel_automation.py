@@ -1,11 +1,13 @@
-import pandas as pd
-from openpyxl import Workbook, load_workbook
-import fire
-from collections import OrderedDict
-import utils.excel_functions as ef
 import ast
 import string
-
+import matplotlib as mpl
+import numpy as np
+import datetime
+import pandas as pd
+import fire
+import utils.excel_functions as ef
+from openpyxl import Workbook, load_workbook
+from collections import OrderedDict
 
 jobTypeToDateTimeColsMap = {
     'DOOR': ['start_time', 'end_time', 'tmestamp'],
@@ -54,6 +56,14 @@ def door_job_transform(df):
     df['Month'] = df['tmestamp'].dt.strftime('%b')
     return df
 
+def door_job_transform_viz(df):
+    location_col = []
+    term_col = []
+    for v in df['sensor_id']:
+        location_col.append(locationMap[v])
+    df['Location'] = location_col
+    return df
+
 """ @description: to accept a xlsx/csv file and modify the data based on the format encoded within """
 def construct_template_headers(ws):
     """ @description: returns an OrderedDict of headers/the encoded value """
@@ -87,3 +97,13 @@ def csv_transform(query_set, task_type):
     if task_type == 'DOOR':
         df_data = door_job_transform(df_data)
     return df_data
+
+def construct_visualization(instances, task_type: str):
+    if task_type == 'DOOR':
+        return construct_door_viz(instances)
+
+def construct_door_viz(instances):
+    df = pd.DataFrame.from_records(instances)
+    df = door_job_transform_viz(df)
+    breakpoint()
+    return df.plot(x = 'Location', y = 'in_count')
