@@ -2,7 +2,7 @@ from django.db import models
 
 TASK_CHOICES = (
     ('DOOR', 'DOOR'),
-    ('SCANNER', 'SCANNER'),
+    ('QUESTIONS', 'QUESTIONS'),
 )
 
 # Create your models here.
@@ -39,3 +39,14 @@ class DoorCountInstance(models.Model):
     serial_number = models.CharField(max_length=255)
     sensor_group = models.CharField(max_length=255)
     tmestamp = models.DecimalField(max_digits=100,decimal_places=20)
+
+class QuestionsInstance(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='taskid')
+    id = models.IntegerField(primary_key=True)
+    internal_notes = models.CharField(max_length=1000)
+    ip_address = models.CharField(max_length=100)
+    entered_by = models.CharField(max_length=100)
+    desk_location = models.CharField(max_length=100)
+    question = models.CharField(max_length=100)
+    question_type = models.CharField(max_length=1000)
+    date = models.DecimalField(max_digits=100, decimal_places=20)

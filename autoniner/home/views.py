@@ -12,7 +12,7 @@ from django.urls import reverse
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 import matplotlib.pyplot as plt
 from .forms import TaskForm, DoorCountInstanceForm
-from .models import Task, DoorCountInstance
+from .models import Task, DoorCountInstance, QuestionsInstance
 
 task_type_map = {
     'DOOR': DoorCountInstance,
@@ -43,26 +43,46 @@ def CreateExcelTemplate(request, id):
     if request.method == 'POST':
         instances = json.loads(request.POST['template'])
         dc_instances = []
-        for i in instances:
-            dc_instances.append(
-                DoorCountInstance(
-                    task = t,
-                    id = i['id'],
-                    sensor_id = i['sensor_id'],
-                    start_time = i['start_time'],
-                    end_time = i['end_time'],
-                    in_count = i['in_count'],
-                    out_count = i['out_count'],
-                    sensor_type = i['sensor_type'],
-                    ip_address = i['ip_address'],
-                    device_type = i['device_type'],
-                    serial_number = i['serial_number'],
-                    sensor_group = i['sensor_group'],
-                    tmestamp = i['tmestamp'],
+        if t.task_type == 'DOOR':
+            for i in instances:
+                dc_instances.append(
+                    DoorCountInstance(
+                        task = t,
+                        id = i['id'],
+                        sensor_id = i['sensor_id'],
+                        start_time = i['start_time'],
+                        end_time = i['end_time'],
+                        in_count = i['in_count'],
+                        out_count = i['out_count'],
+                        sensor_type = i['sensor_type'],
+                        ip_address = i['ip_address'],
+                        device_type = i['device_type'],
+                        serial_number = i['serial_number'],
+                        sensor_group = i['sensor_group'],
+                        tmestamp = i['tmestamp'],
+                    )
                 )
-            )
-        DoorCountInstance.objects.bulk_create(dc_instances)
-        task_objs = DoorCountInstance.objects.filter(task_id=t).values()
+            DoorCountInstance.objects.bulk_create(dc_instances)
+            task_objs = DoorCountInstance.objects.filter(task_id=t).values()
+        elif t.task_type == 'QUESTIONS':
+            breakpoint()
+            for i in instances:
+                dc_instances.append(
+                    QuestionsInstance(
+                        task = t,
+                        id = i['id'],
+                        internal_notes = i['Internal Notes'] if 'Internal Notes' in i else '',
+                        ip_address = i['IP Address'] if 'IP Address' in i else '',
+                        entered_by = i['Entered By'],
+                        desk_location = i['Desk/Location'],
+                        question = i['Question'] if 'Question' in i else '',
+                        question_type = i['Question Type'],
+                        date = i['Date']
+                    )
+                )
+            breakpoint()
+            QuestionsInstance.objects.bulk_create(dc_instances)
+            task_objs = QuestionsInstance.objects.filter(task_id=t).values()
         df_csv = ea.csv_transform(task_objs, t.task_type)
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename={}_{}.csv'.format(t.task_type, time.strftime('%Y%m%d_%H%M%S'))
