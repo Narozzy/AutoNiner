@@ -16,6 +16,7 @@ from .models import Task, DoorCountInstance, QuestionsInstance
 
 task_type_map = {
     'DOOR': DoorCountInstance,
+    'QUESTIONS': QuestionsInstance
 }
 
 # Create your views here.
@@ -65,7 +66,6 @@ def CreateExcelTemplate(request, id):
             DoorCountInstance.objects.bulk_create(dc_instances)
             task_objs = DoorCountInstance.objects.filter(task_id=t).values()
         elif t.task_type == 'QUESTIONS':
-            breakpoint()
             for i in instances:
                 dc_instances.append(
                     QuestionsInstance(
@@ -80,7 +80,6 @@ def CreateExcelTemplate(request, id):
                         date = i['Date']
                     )
                 )
-            breakpoint()
             QuestionsInstance.objects.bulk_create(dc_instances)
             task_objs = QuestionsInstance.objects.filter(task_id=t).values()
         df_csv = ea.csv_transform(task_objs, t.task_type)
@@ -94,14 +93,22 @@ def VisualizationPage(request,id):
     t = Task.objects.get(task_id=id)
     i = task_type_map[t.task_type].objects.all()
     if i:
-        max_range = datetime.datetime.utcfromtimestamp((i.order_by('-start_time').first().start_time - 25569) * Decimal(86400.0))
-        min_range = datetime.datetime.utcfromtimestamp((i.order_by('end_time').first().end_time - 25569) * Decimal(86400.0))
+        if t.task_type == 'DOOR':
+            max_range = datetime.datetime.utcfromtimestamp((i.order_by('-start_time').first().start_time - 25569) * Decimal(86400.0))
+            min_range = datetime.datetime.utcfromtimestamp((i.order_by('end_time').first().end_time - 25569) * Decimal(86400.0))
+        elif t.task_type == 'QUESTIONS':
+            max_range = datetime.datetime.utcfromtimestamp((i.order_by('-date').first().date - 25569) * Decimal(86400.0))
+            min_range = datetime.datetime.utcfromtimestamp((i.order_by('date').first().date - 25569) * Decimal(86400.0)) 
     else:
         min_range, max_range = '', ''
     if request.method == 'POST':
         start_date = convert_to_serial(datetime.datetime.strptime(request.POST['start_date'], '%m/%d/%Y'))
         end_date = convert_to_serial(datetime.datetime.strptime(request.POST['end_date'], '%m/%d/%Y'))
-        instances = task_type_map[t.task_type].objects.filter(task_id=t).filter(start_time__gte=start_date).filter(end_time__lte=end_date).values()
+        if t.task_type == 'DOOR':
+            instances = task_type_map[t.task_type].objects.filter(task_id=t).filter(start_time__gte=start_date).filter(end_time__lte=end_date).values()
+        elif t.task_type == 'QUESTIONS':
+            instances = task_type_map[t.task_type].objects.filter(task_id=t).filter(date__gte=start_date).filter(date__lte=end_date).values()
+            breakpoint()
         plot = ea.construct_visualization(instances, t.task_type)
         FigureCanvasAgg(plot)
         buf = io.BytesIO()

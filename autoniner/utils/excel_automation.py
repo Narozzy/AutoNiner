@@ -11,10 +11,12 @@ from collections import OrderedDict
 
 jobTypeToDateTimeColsMap = {
     'DOOR': ['start_time', 'end_time', 'tmestamp'],
+    'QUESTIONS': ['date']
 }
 
 jobTypeColumnsToSave = {
-    'DOOR': ['sensor_id', 'tmestamp', 'in_count', 'out_count']
+    'DOOR': ['sensor_id', 'tmestamp', 'in_count', 'out_count'],
+    'QUESTIONS': ['id', 'date', 'ip_address', 'internal_notes', 'entered_by', 'desk_location', 'question', 'question_type']
 }
 
 master_template_cols = ['Location', 'Time', 'DayOfWeek', 'Month', 'Day', 'Month+Day', 'Term', 'Calendar', 'Semester', 'AY']
