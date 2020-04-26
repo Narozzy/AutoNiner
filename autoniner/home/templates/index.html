@@ -12,18 +12,19 @@
                     <svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false" role="img" aria-label="Placeholder: Door Count"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"></rect><text x="50%" y="50%" fill="#eceeef" dy=".3em">{{task.title}}</text></svg>
                     <div class="card-body">
                     <p class="card-text">{{ task.description }}</p>
+                    <p class='card-text'>Last Updated: {{ task.last_modified }}</p>
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="btn-group">
                             <form method='get' action='/template/{{task.task_id}}'>
-                              <button type="submit" class="btn btn-sm btn-outline-secondary">Edit</button>
+                              <button type="submit" class="btn btn-sm btn-outline-secondary">Upload</button>
+                            </form>
+                            <form method='get' action='/visualization/{{task.task_id}}'>
+                              <button type='submit' class='btn btn-sm btn-outline-secondary'>Visual</button>
                             </form>
                               <!-- Button trigger modal -->
                             <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#exampleModal" onclick='deleteModalCreateAction({{task.task_id}}, "{{task.title}}");'>
                               Delete Task
                             </button>
-                            <form method='get' action='/visualization/{{task.task_id}}'>
-                              <button type='submit' class='btn btn-sm btn-outline-secondary'>Details</button>
-                            </form>
                         </div>
                     </div>
                     </div>
@@ -40,16 +41,17 @@
                     <svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false" role="img" aria-label="Placeholder: Door Count"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"></rect><text x="50%" y="50%" fill="#eceeef" dy=".3em">{{task.title}}</text></svg>
                     <div class="card-body">
                     <p class="card-text">{{ task.description }}</p>
+                    <p class='card-text'>Last Updated: {{ task.last_modified }}</p>
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="btn-group">
-                            <button type="button" class="btn btn-sm btn-outline-secondary">Edit</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">Upload</button>
+                            <form method='get' action='/visualization/{{task.task_id}}'>
+                              <button type='submit' class='btn btn-sm btn-outline-secondary'>Visual</button>
+                            </form>
                               <!-- Button trigger modal -->
                             <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#exampleModal" onclick='deleteModalCreateAction({{task.task_id}}, "{{task.title}}");'>
                               Delete Task
                             </button>
-                            <form method='get' action='/visualization/{{task.task_id}}'>
-                              <button type='submit' class='btn btn-sm btn-outline-secondary'>Details</button>
-                            </form>
                         </div>
                     </div>
                     </div>
