@@ -49,11 +49,14 @@
         $('#datetimepicker1').datetimepicker({
             format: 'L',
             useCurrent: false,
+            defaultDate: moment('{{formatted_min_range}}')
         });
         $('#datetimepicker2').datetimepicker({
             format: 'L',
             useCurrent: false,
+            defaultDate: moment('{{formatted_max_range}}')
         });
+
         $("#datetimepicker1").on("change.datetimepicker", function (e) {
             console.log(e);
             $('#datetimepicker2').datetimepicker('minDate', e.date);

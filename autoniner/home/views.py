@@ -109,9 +109,11 @@ def VisualizationPage(request,id):
             min_range = datetime.datetime.utcfromtimestamp((i.order_by('end_time').first().end_time - 25569) * Decimal(86400.0))
         elif t.task_type == 'QUESTIONS':
             max_range = datetime.datetime.utcfromtimestamp((i.order_by('-date').first().date - 25569) * Decimal(86400.0))
-            min_range = datetime.datetime.utcfromtimestamp((i.order_by('date').first().date - 25569) * Decimal(86400.0)) 
+            min_range = datetime.datetime.utcfromtimestamp((i.order_by('date').first().date - 25569) * Decimal(86400.0))
+        f_max_range = max_range.isoformat()
+        f_min_range = min_range.isoformat()
     else:
-        min_range, max_range = '', ''
+        min_range, max_range, f_min_range, f_max_range = '', '', '', ''
     if request.method == 'POST':
         start_date = convert_to_serial(datetime.datetime.strptime(request.POST['start_date'], '%m/%d/%Y'))
         end_date = convert_to_serial(datetime.datetime.strptime(request.POST['end_date'], '%m/%d/%Y'))
@@ -126,7 +128,7 @@ def VisualizationPage(request,id):
         plt.close(plot)
         response = HttpResponse(buf.getvalue(),content_type = 'image/png')
         return response
-    return render(request, 'data_visualization.html', context={'id':t.task_id, 'task_type': t.task_type, 'min_range': min_range, 'max_range': max_range})
+    return render(request, 'data_visualization.html', context={'id':t.task_id, 'task_type': t.task_type, 'min_range': min_range, 'max_range': max_range, 'formatted_min_range': f_min_range, 'formatted_max_range': f_max_range})
 
 def delete(request, id):
     t = Task.objects.get(task_id=id)
