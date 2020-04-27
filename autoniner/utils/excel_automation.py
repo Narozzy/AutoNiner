@@ -69,31 +69,6 @@ def door_job_transform_viz(df):
     coffee_total = df.loc[df['Location'] == 'CoffeeShop']['in_count'].sum() - df.loc[df['Location'] == 'CoffeeShop']['out_count'].sum()
     return north_total, south_total, coffee_total
 
-""" @description: to accept a xlsx/csv file and modify the data based on the format encoded within """
-def construct_template_headers(ws):
-    """ @description: returns an OrderedDict of headers/the encoded value """
-    d = OrderedDict()
-    for header,encoding in zip(ws[1],ws[2]):
-        d.update({header.value:encoding.value})
-    return d
-
-def parse_item(i):
-    it = i[2:-2] # remove << >>
-    if 'FORM' in it:
-        it = it[5:-1] # Remove FORM()
-        args = it.split(',')
-        if ':' in args[0]: # Check if this is suppose to be a list
-            args[0] = ast.literal_eval(','.join(args[0].split(':')))
-        if args[1][:args[1].find('(')] in FUNCTIONS_W_PARAMS:
-            params = args[1][args[1].find('(')+1:args[1].find(')')]
-            params = apply_conversions(params)
-            funct = args[1][:args[1].find('(')]
-            args[1] = [funct,params]
-    else:
-        args = it.split(':')
-    return args
-
-
 def csv_transform(query_set, task_type):
     df_data = pd.DataFrame.from_records(query_set)
     for col in jobTypeToDateTimeColsMap[task_type]:

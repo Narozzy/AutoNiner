@@ -91,7 +91,6 @@ def CreateExcelTemplate(request, id):
             task_objs = QuestionsInstance.objects.filter(task_id=t).values()
         t.last_modified = datetime.datetime.now()
         t.save()
-        breakpoint()
         df_csv = ea.csv_transform(task_objs, t.task_type)
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename={}_{}.csv'.format(t.task_type, time.strftime('%Y%m%d_%H%M%S'))
@@ -120,7 +119,6 @@ def VisualizationPage(request,id):
             instances = task_type_map[t.task_type].objects.filter(task_id=t).filter(start_time__gte=start_date).filter(end_time__lte=end_date).values()
         elif t.task_type == 'QUESTIONS':
             instances = task_type_map[t.task_type].objects.filter(task_id=t).filter(date__gte=start_date).filter(date__lte=end_date).values()
-            breakpoint()
         plot = ea.construct_visualization(instances, t.task_type)
         FigureCanvasAgg(plot)
         buf = io.BytesIO()
