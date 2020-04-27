@@ -1,6 +1,6 @@
 import json
 import pdb
-import utils.excel_automation as ea
+from utils import excel_automation as ea
 import time
 import datetime
 import io
@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from .forms import TaskForm, DoorCountInstanceForm
 from .models import Task, DoorCountInstance, QuestionsInstance
 
+
 task_type_map = {
     'DOOR': DoorCountInstance,
     'QUESTIONS': QuestionsInstance
@@ -21,11 +22,15 @@ task_type_map = {
 
 # Create your views here.
 def index(request):
+    if not request.user.is_superuser:
+        return redirect('/admin')
     all_tasks = Task.objects.all()
     recent_tasks = Task.objects.order_by('last_modified')[:5]
     return render(request, 'index.html', context={'tasks': all_tasks, 'recent_tasks': recent_tasks})
 
 def CreateTask(request):
+    if not request.user.is_superuser:
+        return redirect('/admin')
     content = {'current_user': request.user}
     if request.method == 'POST':
         print(request.POST)
@@ -40,6 +45,8 @@ def CreateTask(request):
     return render(request, 'create_task.html', context=content)
 
 def CreateExcelTemplate(request, id):
+    if not request.user.is_superuser:
+        return redirect('/admin')
     t = Task.objects.get(task_id=id)
     if request.method == 'POST':
         instances = json.loads(request.POST['template'])
@@ -93,6 +100,8 @@ def CreateExcelTemplate(request, id):
     return render(request, 'excel_template.html', context={'id': t.task_id, 'task_type': t.task_type})
 
 def VisualizationPage(request,id):
+    if not request.user.is_superuser:
+        return redirect('/admin')
     t = Task.objects.get(task_id=id)
     i = task_type_map[t.task_type].objects.all()
     if i:
