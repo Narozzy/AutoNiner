@@ -47,18 +47,16 @@
     <script type="text/javascript">
       $(function () {
         $('#datetimepicker1').datetimepicker({
-            format: 'L',
             useCurrent: false,
-            defaultDate: moment('{{formatted_min_range}}')
+            defaultDate: moment('{{formatted_min_range}}'),
+            maxDate: moment('{{formatted_max_range}}')
         });
         $('#datetimepicker2').datetimepicker({
-            format: 'L',
             useCurrent: false,
-            defaultDate: moment('{{formatted_max_range}}')
+            defaultDate: moment('{{formatted_max_range}}'),
+            minDate: moment('{{formatted_min_range}}')
         });
-
         $("#datetimepicker1").on("change.datetimepicker", function (e) {
-            console.log(e);
             $('#datetimepicker2').datetimepicker('minDate', e.date);
         });
         $("#datetimepicker2").on("change.datetimepicker", function (e) {

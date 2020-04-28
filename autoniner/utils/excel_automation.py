@@ -50,12 +50,24 @@ job_transform_lambdas = {
 def door_job_transform(df):
     location_col = []
     term_col = []
+    sem_col = []
+    ay_col = []
     for v in df['sensor_id']:
         location_col.append(locationMap[v])
     df['Location'] = location_col
     df['Time'] = pd.DatetimeIndex(df['tmestamp']).hour
     df['DayOfWeek'] = df['tmestamp'].dt.day_name()
     df['Month'] = df['tmestamp'].dt.strftime('%b')
+    for row in df.iterrows():
+        term_col.append(termMap[row[1]['Month'] + ' ' + str(row[1]['tmestamp'].day)])
+    df['Term'] = term_col
+    df['CalendarYr'] = df['tmestamp'].dt.year
+    for row in df.iterrows():
+        sem_col.append(row[1]['Term'] + ' ' + str(row[1]['CalendarYr'])) 
+    df['Semester'] = sem_col
+    for v in df['Semester']:
+        ay_col.append(academicMap[v]['year'])
+    df['AcademicYr'] = ay_col
     return df
 
 def door_job_transform_viz(df):
@@ -81,6 +93,8 @@ def csv_transform(query_set, task_type):
 def construct_visualization(instances, task_type: str):
     if task_type == 'DOOR':
         return construct_door_viz(instances)
+    elif task_type == 'QUESTIONS':
+        return construct_question_viz(instances)
 
 def construct_door_viz(instances):
     df = pd.DataFrame.from_records(instances)
@@ -91,3 +105,7 @@ def construct_door_viz(instances):
     nums = [n, s, c]
     ax.bar(locations, nums)
     return fig
+
+def construct_question_viz(instances):
+    df = pd.DataFrame.from_records(instances)
+    return df
