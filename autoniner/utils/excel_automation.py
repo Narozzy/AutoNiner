@@ -70,6 +70,25 @@ def door_job_transform(df):
     df['AcademicYr'] = ay_col
     return df
 
+def question_job_transform(df):
+    term_col = []
+    sem_col = []
+    ay_col = []
+    df['Time'] = pd.DatetimeIndex(df['date']).hour
+    df['DayOfWeek'] = df['date'].dt.day_name()
+    df['Month'] = df['date'].dt.strftime('%b')
+    for row in df.iterrows():
+        term_col.append(termMap[row[1]['Month'] + ' ' + str(row[1]['date'].day)])
+    df['Term'] = term_col
+    df['CalendarYr'] = df['date'].dt.year
+    for row in df.iterrows():
+        sem_col.append(row[1]['Term'] + ' ' + str(row[1]['CalendarYr'])) 
+    df['Semester'] = sem_col
+    for v in df['Semester']:
+        ay_col.append(academicMap[v]['year'])
+    df['AcademicYr'] = ay_col
+    return df
+
 def door_job_transform_viz(df):
     location_col = []
     term_col = []
@@ -88,6 +107,8 @@ def csv_transform(query_set, task_type):
     df_data = df_data[jobTypeColumnsToSave[task_type]]
     if task_type == 'DOOR':
         df_data = door_job_transform(df_data)
+    elif task_type == 'QUESTIONS':
+        df_data = question_job_transform(df_data)
     return df_data
 
 def construct_visualization(instances, task_type: str):

@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 from .forms import TaskForm, DoorCountInstanceForm
 from .models import Task, DoorCountInstance, QuestionsInstance
 
-
 task_type_map = {
     'DOOR': DoorCountInstance,
     'QUESTIONS': QuestionsInstance
