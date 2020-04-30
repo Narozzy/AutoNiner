@@ -1,0 +1,9 @@
+{% extends 'base_temp.html' %}
+
+{% block content %}
+    {% load static %}
+    <img src={% static 'logo.png' %} class='rounded mx-auto d-block mt-2' height=500>
+    <h2 class='text-center mt-2'>What is AutoNiner?</h2>
+    <p class='text-center'>AutoNiner takes the monotony out of Excel spreadsheet mapping for your analytical tasks. By implementing specific tasks types, the days of VLOOKUPs are over.</p>
+    <p class='text-center'>By integrating the master-lookup table within our code-base, we are capable of performing your excel spreadsheet mappings quickly and reliably.</p>
+{% endblock content %}

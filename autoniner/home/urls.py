@@ -8,4 +8,5 @@ urlpatterns = [
     path('details/<int:id>', views.details, name='details'),
     path('template/<int:id>', views.CreateExcelTemplate, name='template'),
     path('visualization/<int:id>', views.VisualizationPage, name='viz'),
+    path('about/', views.AboutPage, name='about'),
 ]

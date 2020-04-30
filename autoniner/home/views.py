@@ -140,6 +140,10 @@ def details(request, id):
     t = Task.objects.get(task_id=id)
     return render(request, 'data_visualization.html', context={'task':t})
 
+def AboutPage(request):
+    if not request.user.is_superuser:
+        redirect('/admin')
+    return render(request, 'about.html', context={})
 
 """ Helper Functions """
 def convert_to_serial(dt: datetime.datetime):
