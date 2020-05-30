@@ -8,6 +8,7 @@ import fire
 import utils.excel_functions as ef
 from openpyxl import Workbook, load_workbook
 from collections import OrderedDict
+from decimal import *
 
 jobTypeToDateTimeColsMap = {
     'DOOR': ['start_time', 'end_time', 'tmestamp'],
@@ -130,3 +131,90 @@ def construct_door_viz(instances):
 def construct_question_viz(instances):
     df = pd.DataFrame.from_records(instances)
     return df
+
+def constructDataVisualizationString(instances):
+
+    dataString = "["
+    condensedList = condenseHourInstances(instances)
+
+    for i, hourData in enumerate(condensedList):
+        if (i + 1) == len(condensedList):
+            dataString += hourData.__str__()
+        else:
+            dataString += ( hourData.__str__() + ", " )
+
+    dataString += "]"
+
+    return dataString
+
+def condenseHourInstances(instances):
+
+    class monthlyHourData:
+        hour = 0
+        day = ""
+        month = ""
+        year = ""
+        north_count = 0
+        south_count = 0
+        coffee_count = 0
+
+        def __init__(self, hour, day, month, year, n_count, s_count, c_count ):
+            self.hour = hour
+            self.day = day
+            self.month = month
+            self.year = year
+            self.north_count = n_count
+            self.south_count = s_count
+            self.coffee_count = c_count
+
+        def __str__(self):
+            return '{ "hour":"' + str(self.hour) + '", ' + \
+                   '"day":"' + self.day + '", ' + \
+                   '"month":"' + self.month + '", ' + \
+                   '"year":"' + self.year + '", ' + \
+                   '"north_c":"' + str(self.north_count) + '", ' + \
+                   '"south_c":"' + str(self.south_count) + '", ' + \
+                   '"coffee_c":"' + str(self.coffee_count) + '"' + ' }'
+
+    dictHourData = dict()
+
+    for instance in instances:
+
+        if "Entrance" or "Coffee" in instance["sensor_group"]:
+
+            date = datetime.datetime.utcfromtimestamp((instance["tmestamp"] - 25569) * Decimal(86400.0))
+            dateIntersection = date.strftime("%H-%a-%b-%Y")
+
+            if dateIntersection not in dictHourData:
+
+                north_count = 0
+                south_count = 0
+                coffee_count = 0
+
+                # Assign value of intake to correct entrance
+                if "North" in instance["sensor_group"]:
+                    north_count = instance["in_count"]
+                elif "SE" in instance["sensor_group"]:
+                    south_count = instance["in_count"]
+                elif "Coffee" in instance["sensor_group"]:
+                    coffee_count = instance["in_count"]
+
+                dictHourData[dateIntersection] = monthlyHourData( date.hour, date.strftime("%w"),
+                                                                  str(date.strftime("%B")), str(date.strftime("%Y")),
+                                                                  north_count, south_count, coffee_count)
+            else: #update record to include new intake data
+
+                tempHourData = dictHourData[dateIntersection]
+
+                if "North" in instance["sensor_group"]:
+                    tempHourData.north_count += instance["in_count"]
+                elif "SE" in instance["sensor_group"]:
+                    tempHourData.south_count += instance["in_count"]
+                elif "Coffee" in instance["sensor_group"]:
+                    tempHourData.coffee_count += instance["in_count"]
+
+                dictHourData[dateIntersection] = tempHourData
+
+    tempArray = list(dictHourData.values())
+
+    return tempArray
