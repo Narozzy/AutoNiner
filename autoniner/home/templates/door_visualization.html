@@ -3,7 +3,6 @@
 {% extends 'base_temp.html' %}
 
 {% block content %}
-    <head>
         <!-- Font Awesome -->
         <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 
@@ -31,10 +30,13 @@
         <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/js/bootstrap.min.js"></script>
         <link href="http://cdn.rawgit.com/davidstutz/bootstrap-multiselect/master/dist/css/bootstrap-multiselect.css" rel="stylesheet" type="text/css" />
         <script src="http://cdn.rawgit.com/davidstutz/bootstrap-multiselect/master/dist/js/bootstrap-multiselect.js" type="text/javascript"></script>
-    </head>
+
+        <!-- Load chart.js -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js" integrity="sha256-R4pqcOYV8lt7snxMQO/HSbVCFRPMdrhAFMH+vr9giYI="
+        crossorigin="anonymous"></script>
 
         <div class='mx-auto card shadow w-75 border-secondary m-4 '>
-            <div class="card-header">Heatmap for door traffic</div>
+            <div class="card-header">Graph's for door traffic</div>
             <div class="card-body text-secondary">
 
                 {% if max_range and min_range %}
@@ -158,6 +160,12 @@
 
                     <div id="heatmap_vis" data-hours='{{array_vis}}'></div>
 
+                    <br>
+
+                    <canvas id="hourly_vis"></canvas>
+
+                    <canvas id="daily_vis"></canvas>
+
                 {% else %}
                     <p>There is no data associated to this task, please <a href="/template/{{id}}">upload</a> data for this task to create a visualization.</p>
                 {% endif %}
@@ -166,34 +174,37 @@
 
 <script>
 
-// condense objects by day and time data
-var condenseSharedDayTime = function( unCondenseddata ){
+//Read the data for the graphs
+var pageData = $('#heatmap_vis').data('hours');
+
+// condense data objects by time categories ( day of week & hour , etc. ) //
+var condenseTimeObjects = function( unCondenseddata, timeIntersectionFunction ){
 
 	let condensedMap = new Map();
 
 	unCondenseddata.forEach(function (item, index) {
 
-	  let dayHourStr = "d:" + item.day + "h:" + item.hour;
+	  let intersectionString = timeIntersectionFunction( item );
 
-	  if ( condensedMap.has( dayHourStr ) )
+	  if ( condensedMap.has( intersectionString ) )
 	  {
-		let tempItem = jQuery.extend({}, condensedMap.get( dayHourStr ));
+		let tempItem = jQuery.extend({}, condensedMap.get( intersectionString )); // deep copy of object so that original is not altered
 
 		tempItem.coffee_c = parseInt( tempItem.coffee_c ) + parseInt( item.coffee_c );
 		tempItem.north_c = parseInt( tempItem.north_c ) + parseInt( item.north_c );
 		tempItem.south_c = parseInt( tempItem.south_c ) + parseInt( item.south_c );
 
-		if (   tempItem.year.indexOf(item.year) == -1 ) // check and update if year not in object
+		if (  tempItem.year.indexOf(item.year) == -1 ) // check and update if year not in object
 		{
 			tempItem.year += ", " + item.year;
 		}
 
 		//update entry
-		condensedMap.set( dayHourStr, tempItem );
+		condensedMap.set( intersectionString, tempItem );
 	  }
 	  else
 	  {
-		condensedMap.set( dayHourStr, jQuery.extend({}, item ) );
+		condensedMap.set( intersectionString, jQuery.extend({}, item ) );
 	  }
 	});
 
@@ -243,18 +254,6 @@ var timeLabels = svgHeatMap.selectAll(".timeLabel")
 	.attr("transform", "translate(" + gridSizeHeatMap / 2 + ", -6)")
 	.attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
 
-// ---------- End Heat Map Section ------------ //
-
-// ---------- Bar Graph Section -------------- //
-
-// set dimensions for bar graphs
-var marginBarGraph = {top: 30, right: 30, bottom: 70, left: 60},
-    width = 460 - marginBarGraph.left - marginBarGraph.right,
-    height = 400 - marginBarGraph.top - marginBarGraph.bottom;
-
-//Read the data for the graphs
-var pageData = $('#heatmap_vis').data('hours');
-
 // heat map drawing function
 var drawHeatMap = function(dataIn) {
 
@@ -266,7 +265,7 @@ var drawHeatMap = function(dataIn) {
 	}
 
 	// condense all instances that share weeks and hours
-	let tempData = condenseSharedDayTime( dataIn );
+	let tempData = condenseTimeObjects( dataIn, function ( item ) { return "d:" + item.day + "h:" + item.hour;} );
 
 	var colorScale = d3.scale.quantile()
 	  .domain([0, buckets, d3.max(tempData, function (d) { var dTotal = parseInt(d.north_c) + parseInt(d.south_c) + parseInt(d.coffee_c); return dTotal; })])
@@ -321,11 +320,6 @@ var drawHeatMap = function(dataIn) {
 	legend.exit().remove();
 }
 
-var drawBarGraph = function( dataIn ) {
-
-
-}
-
 // create a tooltip for heatmap
 var tooltip = d3.select("#heatmap_vis")
 .append("div")
@@ -353,8 +347,98 @@ var mouseleaveHeatMap = function(d) {
 tooltip.style("opacity", 0)
 }
 
-// start up default
+// ---------- End Heat Map Section ------------ //
+
+// ----------- < bar graph section > ------------- //
+
+let hourLabels = ["12 am", "1 am", "2 am", "3 am", "4 am", "5 am", "6 am", "7 am", "8 am", "9 am", "10 am", "11 am",
+    "12 pm", "1 pm", "2 pm", "3 pm", "4 pm", "5 pm", "6 pm", "7 pm", "8 pm", "9 pm", "10 pm", "11 pm"];
+
+// ## hourly traffic bar chart subsection ## //
+
+var updateBarChart = function (chart, labelsIn, dataIn ) {
+
+    chart.data.labels = labelsIn;
+    chart.data.datasets[0].data = dataIn;
+
+    chart.update();
+}
+
+var hourlyBarctx = $("#hourly_vis");
+
+var hourlyBarChart = new Chart( hourlyBarctx, {
+    type: 'bar',
+    data: {
+        labels: hourLabels,
+        datasets: [{
+            label: 'traffic per hour',
+            data: [0],
+            backgroundColor: '#8cd265',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        layout: {
+            padding: 50
+        },
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        },
+        title: {
+            position: 'bottom',
+            display: true,
+            text: 'Hourly Traffic for All entrances'
+        },
+    }
+});
+
+// ## end hourly bar chart subsection ## //
+
+// ## daily traffic bar chart subsection ## //
+
+var dailyBarctx = $("#daily_vis");
+
+var dailyBarChart = new Chart( dailyBarctx, {
+    type: 'bar',
+    data: {
+        labels: mydays,
+        datasets: [{
+            label: 'traffic per day',
+            data: [0],
+            backgroundColor: '#8cd265',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        layout: {
+            padding: 50
+        },
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        },
+        title: {
+            position: 'bottom',
+            display: true,
+            text: 'Daily Traffic for All entrances'
+        },
+    }
+});
+
+// ## end daily bar chart subsection ## //
+
+// ----------- < end bar graph section > ------------- //
+
+// start up graphs
 drawHeatMap( "" );
+
 
 // multi-select dropdown
 
@@ -416,6 +500,29 @@ $('#btnget').click( function () {
 
 	// update with selected location
 	drawHeatMap( selectedData );
+
+	// update hourly bar graph
+
+    let condensedHourlyObjects = condenseTimeObjects( selectedData,
+        function ( item ) { return "h:" + item.hour;} )
+            .sort( function ( item1, item2 ) {
+                return parseInt(item1.hour) - parseInt(item2.hour);
+            });
+
+    updateBarChart( hourlyBarChart,
+        condensedHourlyObjects.map( item => item.hour ),
+        condensedHourlyObjects.map( item => parseInt(item.north_c) + parseInt(item.south_c) + parseInt(item.coffee_c) ) );
+
+    // update daily bar graph
+    let condensedDailyObjects = condenseTimeObjects( selectedData,
+        function ( item ) { return "d:" + item.day;} ).sort(
+            function ( item1, item2)  {
+                return parseInt(item1.day) - parseInt(item2.day);
+            });
+
+    updateBarChart( dailyBarChart,
+        condensedDailyObjects.map( item => mydays[item.day] ),
+        condensedDailyObjects.map( item => parseInt(item.north_c) + parseInt(item.south_c) + parseInt(item.coffee_c) ) );
 });
 
 </script>
