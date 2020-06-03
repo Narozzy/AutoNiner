@@ -157,8 +157,9 @@ def condenseHourInstances(instances):
         north_count = 0
         south_count = 0
         coffee_count = 0
+        monthDay = ""
 
-        def __init__(self, hour, day, month, year, n_count, s_count, c_count ):
+        def __init__(self, hour, day, month, year, n_count, s_count, c_count, monthDay ):
             self.hour = hour
             self.day = day
             self.month = month
@@ -166,10 +167,12 @@ def condenseHourInstances(instances):
             self.north_count = n_count
             self.south_count = s_count
             self.coffee_count = c_count
+            self.monthDay = monthDay
 
         def __str__(self):
             return '{ "hour":"' + str(self.hour) + '", ' + \
                    '"day":"' + self.day + '", ' + \
+                   '"monthDay":"' + self.monthDay + '", ' + \
                    '"month":"' + self.month + '", ' + \
                    '"year":"' + self.year + '", ' + \
                    '"north_c":"' + str(self.north_count) + '", ' + \
@@ -201,7 +204,7 @@ def condenseHourInstances(instances):
 
                 dictHourData[dateIntersection] = monthlyHourData( date.hour, date.strftime("%w"),
                                                                   str(date.strftime("%B")), str(date.strftime("%Y")),
-                                                                  north_count, south_count, coffee_count)
+                                                                  north_count, south_count, coffee_count, date.strftime("%d"))
             else: #update record to include new intake data
 
                 tempHourData = dictHourData[dateIntersection]
@@ -218,3 +221,4 @@ def condenseHourInstances(instances):
     tempArray = list(dictHourData.values())
 
     return tempArray
+

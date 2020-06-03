@@ -46,7 +46,7 @@
                     <div class="container p-3 my-3" style="padding:20px; width:90%;">
                         <div class="row" >
                             <div class="col-sm-3" >
-                                <label for="yearSelector">Year:</label>
+                                <label for="yearSelector">Ac Year:</label>
                                 <select id="yearSelector" multiple="multiple">
                                     {% for item in year_options %}
 
@@ -158,13 +158,25 @@
                         <input class="btn btn-primary" type="button" id="btnget" value="Get Selected Values" />
                     </div>
 
-                    <div id="heatmap_vis" data-hours='{{array_vis}}'></div>
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#yrComp">Year Comparison</a></li>
+                        <li><a data-toggle="tab" href="#dateHrComp">Traffic x Date x Hour</a></li>
+                        <li><a data-toggle="tab" href="#dayComp">Daily Traffic</a></li>
+                    </ul>
 
-                    <br>
-
-                    <canvas id="hourly_vis"></canvas>
-
-                    <canvas id="daily_vis"></canvas>
+                    <div class="tab-content">
+                        <div id="yrComp" class="tab-pane fade in active">
+                            <canvas id="yearly_vis"></canvas>
+                            <canvas id="entrance_vis"></canvas>
+                        </div>
+                        <div id="dateHrComp" class="tab-pane fade">
+                            <div id="heatmap_vis" data-hours='{{array_vis}}'></div>
+                            <canvas id="hourly_vis"></canvas>
+                        </div>
+                        <div id="dayComp" class="tab-pane fade">
+                            <canvas id="daily_vis"></canvas>
+                        </div>
+                    </div>
 
                 {% else %}
                     <p>There is no data associated to this task, please <a href="/template/{{id}}">upload</a> data for this task to create a visualization.</p>
@@ -178,7 +190,8 @@
 var pageData = $('#heatmap_vis').data('hours');
 
 // condense data objects by time categories ( day of week & hour , etc. ) //
-var condenseTimeObjects = function( unCondenseddata, timeIntersectionFunction ){
+// do empty string for rangeList if gaps in data range does not matter //
+var condenseTimeObjects = function( unCondenseddata, timeIntersectionFunction, rangeList, createEmptyDataFunction ){
 
 	let condensedMap = new Map();
 
@@ -208,9 +221,41 @@ var condenseTimeObjects = function( unCondenseddata, timeIntersectionFunction ){
 	  }
 	});
 
+	if ( rangeList != "" )
+    {
+        rangeList.forEach( function (rangeItem) {
+
+            // checks if the rangeItem key returns a value
+            if ( !condensedMap.has( rangeItem ) )
+            {
+                let tempItem = createEmptyDataFunction(rangeItem);
+
+                // place empty time data into range hole
+                condensedMap.set( rangeItem, tempItem );
+            }
+
+        } )
+    }
+
 	let condensedArray = Array.from( condensedMap.values() );
 
 	return condensedArray;
+}
+
+// get academic year of a date //
+var getAcademicYear = function ( year, month, monthDay) {
+    let yrString = "";
+
+    if (month >= 8 && monthDay >= 13)
+    {
+        yrString = year.toString().slice(-2) + "-" + ( year + 1 ).toString().slice(-2);;
+    }
+    else
+    {
+        yrString = ( year - 1 ).toString().slice(-2) + "-" + year.toString().slice(-2);;
+    }
+
+    return yrString;
 }
 
 // ------------ heat map section ------------- //
@@ -222,7 +267,7 @@ var marginHeatMap = { top: 50, right: 0, bottom: 100, left: 40 },
   gridSizeHeatMap = Math.floor(widthHeatMap / 24),
   legendElementWidth = gridSizeHeatMap*2,
   buckets = 12,
-  colorsHeatMap = ["#eef8e9","#dbf1ce","#c7e9b4","#b3e19a","#a0da7f","#8cd265","#79ca4b","#67bc37","#58a22f","#4a8728","#3c6d20","#2d5318"],
+  colorsHeatMap = ["#eef8e9","#dbf1ce","#c7e9b4","#b3e19a","#a0da7f","#8cd265","#DDEFFD","#bbdffa","#97baec","#6987d5","#2c43b8"],
   mydays = ["Sun","Mon","Tues","Wed","Thur","Fri","Sat"],
   myHours = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"],
   months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -264,17 +309,14 @@ var drawHeatMap = function(dataIn) {
 	  dataIn = $.parseJSON(emptyDataString);
 	}
 
-	// condense all instances that share weeks and hours
-	let tempData = condenseTimeObjects( dataIn, function ( item ) { return "d:" + item.day + "h:" + item.hour;} );
-
 	var colorScale = d3.scale.quantile()
-	  .domain([0, buckets, d3.max(tempData, function (d) { var dTotal = parseInt(d.north_c) + parseInt(d.south_c) + parseInt(d.coffee_c); return dTotal; })])
+	  .domain([0, buckets, d3.max(dataIn, function (d) { var dTotal = parseInt(d.north_c) + parseInt(d.south_c) + parseInt(d.coffee_c); return dTotal; })])
 	  .range(colorsHeatMap);
 
 	// add the squares
 
 	var cards = svgHeatMap.selectAll(".hour")
-		.data(tempData, function(d) {return d.day +':'+d.hour;});
+		.data(dataIn, function(d) {return d.day +':'+d.hour;});
 
 	cards.enter().append("g")
 
@@ -309,7 +351,7 @@ var drawHeatMap = function(dataIn) {
 	.attr("y", heightHeatMap)
 	.attr("width", legendElementWidth)
 	.attr("height", gridSizeHeatMap / 2)
-	.style("fill", function(d, i) { return colorsHeatMap[i]; });
+	.style("fill", function(d, i) { return colorsHeatMap[i+1]; });
 
 	legend.append("text")
 	.attr("class", "mono")
@@ -354,8 +396,6 @@ tooltip.style("opacity", 0)
 let hourLabels = ["12 am", "1 am", "2 am", "3 am", "4 am", "5 am", "6 am", "7 am", "8 am", "9 am", "10 am", "11 am",
     "12 pm", "1 pm", "2 pm", "3 pm", "4 pm", "5 pm", "6 pm", "7 pm", "8 pm", "9 pm", "10 pm", "11 pm"];
 
-// ## hourly traffic bar chart subsection ## //
-
 var updateBarChart = function (chart, labelsIn, dataIn ) {
 
     chart.data.labels = labelsIn;
@@ -363,6 +403,8 @@ var updateBarChart = function (chart, labelsIn, dataIn ) {
 
     chart.update();
 }
+
+// ## hourly traffic bar chart subsection ## //
 
 var hourlyBarctx = $("#hourly_vis");
 
@@ -434,11 +476,82 @@ var dailyBarChart = new Chart( dailyBarctx, {
 
 // ## end daily bar chart subsection ## //
 
+// ## yearly traffic bar chart subsection ## //
+
+var yearlyBarctx = $("#yearly_vis");
+
+var yearlyBarChart = new Chart( yearlyBarctx, {
+    type: 'bar',
+    data: {
+        labels: ["2020"],
+        datasets: [{
+            label: 'traffic per year',
+            data: [0],
+            backgroundColor: '#8cd265',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        layout: {
+            padding: 50
+        },
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        },
+        title: {
+            position: 'bottom',
+            display: true,
+            text: 'Yearly Traffic for All entrances'
+        },
+    }
+});
+
+// ## end yearly bar chart subsection ## //
+
+// ## entrance specific traffic bar chart subsection ## //
+
+var entranceBarctx = $("#entrance_vis");
+
+var entranceBarChart = new Chart( entranceBarctx, {
+    type: 'bar',
+    data: {
+        labels: ["north","south","pete's coffee"],
+        datasets: [{
+            label: 'traffic for each entrance by year',
+            data: [0],
+            backgroundColor: '#8cd265',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        layout: {
+            padding: 50
+        },
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        },
+        title: {
+            position: 'bottom',
+            display: true,
+            text: 'Yearly Traffic for All entrances'
+        },
+    }
+});
+
+// ## end entrance bar chart subsection ## //
+
 // ----------- < end bar graph section > ------------- //
 
 // start up graphs
 drawHeatMap( "" );
-
 
 // multi-select dropdown
 
@@ -449,7 +562,6 @@ $('#monthSelector').multiselect({
 $('#daySelector').multiselect({
 	includeSelectAllOption: true,
 	maxHeight: 200
-
 });
 $('#hourSelector').multiselect({
 	includeSelectAllOption: true,
@@ -493,36 +605,88 @@ $('#btnget').click( function () {
 		hourArr.push($(this).val());
 	});
 
-	selectedData =  pageData.filter(function(d){ return yearArr.includes( d.year ) && monthArr.includes( d.month ) && dayArr.includes( d.day ) && hourArr.includes( d.hour ); }) ;
+	// update data by selections
+	selectedData =  pageData.filter(function(d){ return yearArr.includes( getAcademicYear(d.year, d.month, d.monthDay ) ) && monthArr.includes( d.month ) && dayArr.includes( d.day ) && hourArr.includes( d.hour ); }) ;
 
-	// clear previous squares
+	// update heatmap graph //
+
+    //# clear previous squares
 	drawHeatMap( "" );
 
-	// update with selected location
+	let condensedHourlyDailyObjects = condenseTimeObjects( selectedData,
+        function ( item ) { return "d:" + item.day + "h:" + item.hour;},
+                                                                     "",
+        function () { // do nothing, data gaps are acceptable //
+        } );
+
 	drawHeatMap( selectedData );
 
-	// update hourly bar graph
-
+	// update hourly bar graph //
     let condensedHourlyObjects = condenseTimeObjects( selectedData,
-        function ( item ) { return "h:" + item.hour;} )
-            .sort( function ( item1, item2 ) {
-                return parseInt(item1.hour) - parseInt(item2.hour);
-            });
+        function ( item ) { return item.hour;},
+                                       myHours,
+        function (dateTimePoint) {
+            let emptyDataPlaceHolder = '{ "hour":"' + dateTimePoint + '", "day":"5", "month":"' + months[0] +
+                '", "year":"No Data",  "north_c":"0",  "south_c":"0", "coffee_c":"0" }';
+            return $.parseJSON(emptyDataPlaceHolder);
+        }).sort( function ( item1, item2 ) {
+            return parseInt(item1.hour) - parseInt(item2.hour);
+        });
 
     updateBarChart( hourlyBarChart,
-        condensedHourlyObjects.map( item => item.hour ),
+        condensedHourlyObjects.map( item => hourLabels[item.hour] ),
         condensedHourlyObjects.map( item => parseInt(item.north_c) + parseInt(item.south_c) + parseInt(item.coffee_c) ) );
 
-    // update daily bar graph
+    // update daily bar graph //
     let condensedDailyObjects = condenseTimeObjects( selectedData,
-        function ( item ) { return "d:" + item.day;} ).sort(
-            function ( item1, item2)  {
-                return parseInt(item1.day) - parseInt(item2.day);
-            });
+        function ( item ) { return item.day;},
+                ["0","1","2","3","4","5","6"],
+        function (dateTimePoint) {
+            let emptyDataPlaceHolder = '{ "hour":"0", "day":"' + dateTimePoint + '", "month":"' + months[0] +
+                '", "year":"No Data",  "north_c":"0",  "south_c":"0", "coffee_c":"0" }';
+            return $.parseJSON(emptyDataPlaceHolder);
+        }).sort(
+        function ( item1, item2)  {
+            return parseInt(item1.day) - parseInt(item2.day);
+        });
 
     updateBarChart( dailyBarChart,
         condensedDailyObjects.map( item => mydays[item.day] ),
         condensedDailyObjects.map( item => parseInt(item.north_c) + parseInt(item.south_c) + parseInt(item.coffee_c) ) );
+
+    // update yearly bar graph //
+    let condensedYearlyObjects = condenseTimeObjects( selectedData,
+    function ( item ) { return getAcademicYear(item.year, item.month, item.monthDay );},
+                                  yearArr,
+    function (dateTimePoint) {
+        let emptyDataPlaceHolder = '{ "hour":"0", "day":"0", "month":"' + months[0] +
+            '", "year":"' + dateTimePoint + '",  "north_c":"0",  "south_c":"0", "coffee_c":"0" }';
+        return $.parseJSON(emptyDataPlaceHolder);
+    }).sort(
+    function ( item1, item2)  {
+        return parseInt(item1.year) - parseInt(item2.year);
+    });
+
+    updateBarChart( yearlyBarChart,
+        condensedYearlyObjects.map( item => getAcademicYear(item.year, item.month, item.monthDay ) ),
+        condensedYearlyObjects.map( item => parseInt(item.north_c) + parseInt(item.south_c) + parseInt(item.coffee_c) ) );
+
+    // update entrance bar graph
+    let entranceLabelArr = [];
+    let entranceDataArr = [];
+
+    condensedYearlyObjects.forEach( function (item) {
+    let labelString = getAcademicYear(item.year, item.month, item.monthDay );
+        entranceLabelArr.push( "North Entr. " + labelString );
+        entranceLabelArr.push( "South Entr. " + labelString );
+        entranceLabelArr.push( "Coffee Entr. " + labelString );
+
+        entranceDataArr.push( item.north_c );
+        entranceDataArr.push( item.south_c );
+        entranceDataArr.push( item.coffee_c );
+    })
+
+    updateBarChart( entranceBarChart, entranceLabelArr, entranceDataArr);
 });
 
 </script>

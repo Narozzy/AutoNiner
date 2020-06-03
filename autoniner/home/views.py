@@ -13,6 +13,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 import matplotlib.pyplot as plt
 from .forms import TaskForm, DoorCountInstanceForm
 from .models import Task, DoorCountInstance, QuestionsInstance
+from dateutil.relativedelta import relativedelta
 
 task_type_map = {
     'DOOR': DoorCountInstance,
@@ -115,13 +116,22 @@ def VisualizationPage(request,id):
 
             hourDataArray = ea.constructDataVisualizationString(instances)
 
-            year_range = [min_range.strftime("%Y")]
+            year_range = []
 
-            if max_range.strftime("%Y") not in year_range:
-                year_difference = max_range.year.__int__() - min_range.year.__int__() + 1
+            for item in instances:
+                tempDate = datetime.datetime.utcfromtimestamp((item["tmestamp"] - 25569) * Decimal(86400.0))
+                academic_year_start = datetime.datetime(tempDate.year,8,13)
+                academic_year = ""
 
-                for i in range(1, year_difference):
-                    year_range.append( "" + min_range.year.__int__() + i)
+                if tempDate > academic_year_start:
+                    tempYear = datetime.datetime(tempDate.year + 1,8,14)
+                    academic_year = tempDate.strftime("%y") + "-" + tempYear.strftime("%y")
+                else:
+                    tempYear = datetime.datetime(tempDate.year - 1,8,14)
+                    academic_year = tempYear.strftime("%y") + "-" + tempDate.strftime("%y")
+
+                if academic_year not in year_range:
+                    year_range.append(academic_year)
 
             return render(request, 'door_visualization.html', context={'id':t.task_id, 'array_vis': hourDataArray, 'task_type': t.task_type, 'min_range': min_range, 'max_range': max_range, 'year_options': year_range})
 
